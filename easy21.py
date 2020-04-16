@@ -161,4 +161,7 @@ class Easy21GameEnvironment:
         if state[1] <= 21 and self.dealers_sum > state[1] and self.done:
             return 0
 
+    def render(self):
+        # TODO: Add visual graphics
+        pass
         

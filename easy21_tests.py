@@ -37,13 +37,13 @@ class Easy21GameEnvironmentTestCase(unittest.TestCase):
 
     def test_reward_draw(self):
         self.env.current_state = (9, 17)
-        self.env.done = False
+        self.env.done = True
         self.env.dealers_sum = 17
         self.assertTrue(self.env.reward(self.env.current_state) == 0)
     
     def test_reward_win(self):
         self.env.current_state = (10, 21)
-        self.env.done = False
+        self.env.done = True
         self.env.dealers_sum = 14
         self.assertTrue(self.env.reward(self.env.current_state) == 1)
     

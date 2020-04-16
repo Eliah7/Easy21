@@ -88,15 +88,14 @@ class Easy21GameEnvironment:
         assert action in self.actions, "Only two actions are possible { 0 : \"stick\", 1 : \"hit\"}"
 
         if action == 0:  
+            self.done = True # when the player sticks the game is over
             self.dealer_acts() 
             reward = self.reward(self.current_state) # collect reward for being in this state
-        
-        else:
+        else: # otherwise they continue playing until they bust or stick
             drawn_card = self.deck.draw()
             self.current_state = (self.current_state[0], self.evaluate_sum(self.current_state[1], drawn_card))
             
-            self.dealer_acts()
-            
+            # self.dealer_acts()
             reward = self.reward(self.current_state) # collect reward for being in this state 
         return reward, self.current_state, self.done
 
@@ -147,19 +146,19 @@ class Easy21GameEnvironment:
             [int] - [Amount of reward the agent receives]
         """
         if state[1] > 21 and not self.done:
-            self.done = True
+            self.done = True  # the game ends if the player goes bust
             return -1
-
-        if not self.done and self.dealers_sum == state[1] and state[1] <= 21:
-            self.done = True
+        
+        if state[1] <= 21 and not self.done:
             return 0
 
-        if state[1] <= 21 and self.dealers_sum < state[1] and not self.done:
-            self.done = True
+        if self.done and self.dealers_sum == state[1] and state[1] <= 21:
+            return 0
+
+        if state[1] <= 21 and self.dealers_sum < state[1] and self.done:
             return 1
 
-        if state[1] <= 21 and self.dealers_sum > state[1] and not self.done:
-            self.done = True
+        if state[1] <= 21 and self.dealers_sum > state[1] and self.done:
             return 0
 
         

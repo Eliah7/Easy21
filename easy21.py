@@ -55,10 +55,111 @@ class Deck:
 
 class Easy21GameEnvironment:
     def __init__(self):
-        pass
+        # Environment parameters
+        self.actions = [0, 1] # 0: stick, 1: hit
+        self.action_description = { 0 : "stick", 1 : "hit"}
 
-    def step(self):
-        pass
+        self.state_space_shape = (1, 1) # (Dealer's first card, Sum of the players cards)
+        self.state_description = "(Dealer's first card, Sum of the players cards)"
+        self.state_space_max = (10, 21) # (max card possible, maximum sum of cards before busting)
+
+        # Game parameters
+        self.deck = Deck()
+        self.dealers_sum = 0 # players sum is part of the state
+
+        # Initializing the game
+        self.reset()
+
+    def step(self, action):
+        """[Function that the agent uses to interact with the environment]
+        
+        \nArguments:
+            action {[int]} -- [{ 0 : "stick", 1 : "hit"}]
+        
+        \nReturns:
+            [tuple] -- [ reward, next_state, done]
+           \n {   
+                reward => How much reward for the current state?
+                next_state => What state is the environment in now?
+                done => Is this the terminal state?
+            }
+                        
+        """
+        assert action in self.actions, "Only two actions are possible { 0 : \"stick\", 1 : \"hit\"}"
+
+        if action == 0:  
+            self.dealer_acts() 
+            reward = self.reward(self.current_state) # collect reward for being in this state
+        
+        else:
+            drawn_card = self.deck.draw()
+            self.current_state = (self.current_state[0], self.evaluate_sum(self.current_state[1], drawn_card))
+            
+            self.dealer_acts()
+            
+            reward = self.reward(self.current_state) # collect reward for being in this state 
+        return reward, self.current_state, self.done
+
+    def evaluate_current_state(self):
+        if self.current_state[1] > 21:
+            self.done = True
+        else:
+            self.done = False
+
+    def dealer_acts(self):
+        """[Policy for actions that the dealer takes given the current state]
+            
+            \n=> The player is unaware of the dealers actions as they do not mutate state
+        """
+        if self.dealers_sum < 17: # hit
+            drawn_card = self.deck.draw()
+            self.dealers_sum = self.evaluate_sum(self.dealers_sum, drawn_card)
+        else: # stay
+            return
+
+    def evaluate_sum(self, current_sum, card):
+        """[Evaluates the new sum given the type of card that is drawn]
+        
+        \nArguments:
+            current_sum {[int]} -- [Current sum of either the player or the dealer]
+            card {[Card]} -- [Card that is drawn from the deck]
+        """
+        if card.color == "black":
+            return (current_sum + card.number)
+        else:
+            return (current_sum - card.number)
 
     def reset(self):
-        pass
+        dealers_card = self.deck.draw_color_card(color="black")
+        players_card = self.deck.draw_color_card(color="black")
+        self.current_state = (dealers_card.number, players_card.number) 
+        self.dealers_sum = dealers_card.number
+        self.done = False
+    
+    def reward(self, state):
+        """[Function that returns the reward given the state]
+            -1 : Player Busts (x, >21) and 
+             0 : Draw or game is not over (x, <=21)
+            +1 : Player wins (x, <=21) and players_sum > dealers_sum and each has already taken atleast one turn
+        \nArguments:
+            state {[tuple]} -- [tuple describing the current state of the game check self.state_description for more information]
+        \nReturns:
+            [int] - [Amount of reward the agent receives]
+        """
+        if state[1] > 21 and not self.done:
+            self.done = True
+            return -1
+
+        if not self.done and self.dealers_sum == state[1] and state[1] <= 21:
+            self.done = True
+            return 0
+
+        if state[1] <= 21 and self.dealers_sum < state[1] and not self.done:
+            self.done = True
+            return 1
+
+        if state[1] <= 21 and self.dealers_sum > state[1] and not self.done:
+            self.done = True
+            return 0
+
+        

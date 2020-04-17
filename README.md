@@ -18,7 +18,7 @@ You should write an environment that implements the game Easy21. Specifi- cally,
 
 10 marks
 
-see #1-Implementation of Easy21.ipynb
+see #1-Implementation of easy21_environment/easy21.py
 
 # #2 Monte-Carlo Control in Easy21
 Apply Monte-Carlo control to Easy21. Initialise the value function to zero. Use a time-varying scalar step-size of αt = 1/N(st,at) and an ε-greedy exploration strategy with εt = N0/(N0 + N(st)), where N0 = 100 is a constant, N(s) is the number of times that state s has been visited, and N(s,a) is the number of times that action a has been selected from state s. Feel free to choose an alternative value for N0, if it helps producing better results. Plot the optimal value function V ∗ (s) = maxa Q∗ (s, a) using similar axes to the following figure taken from Sutton and Barto’s Blackjack example.

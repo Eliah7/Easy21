@@ -10,6 +10,8 @@ Sections
 - [ ] #4 Linear Function Approximation in Easy21
 - [ ] #5 Discussion
 
+Note:
+To run the code, go to the root directory and execute "python -m <package_name>.<module_name>" without .py
 
 # #1-Implementation of Easy21
 You should write an environment that implements the game Easy21. Specifi- cally, write a function, named step, which takes as input a state s (dealer’s first card 1–10 and the player’s sum 1–21), and an action a (hit or stick), and returns a sample of the next state s′ (which may be terminal if the game is finished) and reward r. We will be using this environment for model-free reinforcement learning, and you should not explicitly represent the transition matrix for the MDP. There is no discounting (γ = 1). You should treat the dealer’s moves as part of the environment, i.e. calling step with a stick action will play out the dealer’s cards and return the final reward and terminal state.

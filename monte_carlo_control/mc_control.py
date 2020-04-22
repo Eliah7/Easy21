@@ -11,7 +11,7 @@ def train_monte_carlo_control():
     # build a q_table : dictionary of the form ((state_x, state_y),action) : expected_value for all possible states
     state_space = {
             "a" : (0, state_space_dim[0]),
-            "b" : (-2*state_space_dim[1], 2*state_space_dim[1])
+            "b" : (-3*state_space_dim[1], 3*state_space_dim[1])
     }
     action_space = {
         "min" : actions[0],
@@ -22,7 +22,7 @@ def train_monte_carlo_control():
     # TODO: figure out how to compare policies from two q_tables
 
     # CONSTANTS
-    EPISODES = 10000
+    EPISODES = 100000
     n_0 = 100
     lambda_rate = 1
 
@@ -38,10 +38,11 @@ def train_monte_carlo_control():
 
     for episode in range(EPISODES):
         state = env.current_state
-        g_values = {} # G(s) - discounted reward for being in state s
-        visited_states_action_pair = []
         done = False
         time_step = 0
+
+        returns = {}
+        episode_memory = [] # (state, action, reward) list for each episode
 
         while not done:
             # increment state visit count
@@ -60,24 +61,25 @@ def train_monte_carlo_control():
                 n_s_a[(state, action)] += 1
             else:
                 n_s_a[(state, action)] = 1
-
-            visited_states_action_pair.append((state, action))
-
+            
             # act in the environment
             reward, next_state, done = env.step(action)
             
-            if state in g_values.keys():
-                g_values[state] += reward # discounted : (lambda_rate ** (time_step - 1)) * reward
-            else:
-                g_values[state] = reward
+            episode_memory.append((state, action, reward))
+            
             
             if done:
                 # do policy improvement
-                for state_action_pair in visited_states_action_pair:
-                    state_visited = state_action_pair[0]
-                    q_table[state_action_pair] = q_table[state_action_pair] +  (1 / n_s_a[state_action_pair]) * (g_values[state_visited] - q_table[state_action_pair])
-
-                visited_states_action_pair = []
+                # print("Episode {}. Episode memory length {}".format(episode, len(episode_memory)))
+                for episode_i in range(len(episode_memory)):
+                    state, action, reward = episode_memory[episode_i]
+                    g = reward
+                    for next_episode_i in range(episode_i+1, len(episode_memory)):
+                        _, _, next_reward = episode_memory[next_episode_i]
+                        g += next_reward
+                    
+                    q_table[(state, action)] = q_table[(state, action)] +  (1 / n_s_a[(state, action)]) * (g - q_table[(state, action)])
+                   
                 if reward == 1:
                     remarks = "Won"
                     won += 1
@@ -96,7 +98,8 @@ def train_monte_carlo_control():
 
                 time_step = 0 # reset timestep counter
                 env.reset()
-
+                
+                episode_memory = []
                 break
             else:
                 state = next_state
@@ -113,11 +116,15 @@ def select_action_epsilon_greedy_policy(state, epsilon, q_table, actions):
     if is_random:
          return np.random.choice(actions)
     else:
-        max_state_action_pair = max(q_table, key=q_table.get)
-        action = max_state_action_pair[1]
-        max_reward = q_table[max_state_action_pair]
-        
-        return action
+        max_reward = -100000
+        selected_action = 0
+
+        for action in actions:
+            if max_reward < q_table[(state, action)]:
+                max_reward = q_table[(state, action)]
+                selected_action = action
+
+        return selected_action
     
 
 def build_q_table(state_space, action_space):

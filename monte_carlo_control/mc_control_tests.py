@@ -79,6 +79,7 @@ class MonteCarloTest(unittest.TestCase):
         
         epsilon = 0
         state = (0, 1)
+        q_table[((1,0), 1)] = 100.0
         q_table[(state, 0)] = 40.0
 
         action = select_action_epsilon_greedy_policy(state, epsilon, q_table, env.actions)

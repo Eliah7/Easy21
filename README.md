@@ -5,7 +5,7 @@ from: https://www.davidsilver.uk/wp-content/uploads/2020/03/Easy21-Johannes.pdf
 
 Sections
 - [x] #1-Implementation of Easy21
-- [ ] #2 Monte-Carlo Control in Easy21
+- [x] #2 Monte-Carlo Control in Easy21
 - [ ] #3 TD Learning in Easy21
 - [ ] #4 Linear Function Approximation in Easy21
 - [ ] #5 Discussion

@@ -145,21 +145,22 @@ class Easy21GameEnvironment:
         \nReturns:
             [int] - [Amount of reward the agent receives]
         """
-        if state[1] > 21 and not self.done:
-            self.done = True  # the game ends if the player goes bust
-            return -1
-        
-        if state[1] <= 21 and not self.done:
-            return 0
 
-        if self.done and self.dealers_sum == state[1] and state[1] <= 21:
-            return 0
-
-        if state[1] <= 21 and self.dealers_sum < state[1] and self.done:
-            return 1
-
-        if state[1] <= 21 and self.dealers_sum > state[1] and self.done:
-            return 0
+        if self.done:
+            if state[1] > 21:
+                return -1
+            elif state[1] < self.dealers_sum:
+                return -1
+            elif state[1] > self.dealers_sum:
+                return 1
+            elif state[1] == self.dealers_sum:
+                return 0
+        else:
+            if state[1] > 21:
+                self.done = True
+                return -1
+            else:
+                return 0
 
     def render(self):
         # TODO: Add visual graphics

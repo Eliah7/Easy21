@@ -1,5 +1,5 @@
 import unittest
-from easy21 import *
+from easy21_environment.easy21 import *
 
 class Easy21CardTestCase(unittest.TestCase):
     def setUp(self):

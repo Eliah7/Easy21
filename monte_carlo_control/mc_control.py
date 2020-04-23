@@ -1,6 +1,8 @@
 import numpy as np
 from easy21_environment.easy21 import *
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 
 def train_monte_carlo_control():
     # initialize the environment
@@ -23,7 +25,7 @@ def train_monte_carlo_control():
 
     # CONSTANTS
     EPISODES = 100000
-    n_0 = 100
+    n_0 = 15
     lambda_rate = 1
 
     n_s_a = {} # N(s, a) - number of times an action is taken at a particular state
@@ -67,16 +69,14 @@ def train_monte_carlo_control():
             
             episode_memory.append((state, action, reward))
             
-            
             if done:
                 # do policy improvement
-                # print("Episode {}. Episode memory length {}".format(episode, len(episode_memory)))
-                for episode_i in range(len(episode_memory)):
-                    state, action, reward = episode_memory[episode_i]
+                for time_step_i in range(len(episode_memory)):
+                    state, action, reward = episode_memory[time_step_i]
                     g = reward
-                    for next_episode_i in range(episode_i+1, len(episode_memory)):
-                        _, _, next_reward = episode_memory[next_episode_i]
-                        g += next_reward
+                    for next_time_step_i in range(time_step_i+1, len(episode_memory)):
+                        _, _, next_reward = episode_memory[next_time_step_i]
+                        g += next_reward * (lambda_rate ** (next_time_step_i - 1))
                     
                     q_table[(state, action)] = q_table[(state, action)] +  (1 / n_s_a[(state, action)]) * (g - q_table[(state, action)])
                    
@@ -99,11 +99,12 @@ def train_monte_carlo_control():
                 time_step = 0 # reset timestep counter
                 env.reset()
                 
+                state = env.current_state
+
                 episode_memory = []
                 break
             else:
                 state = next_state
-
                 # go to next timestep
                 continue
 
@@ -126,7 +127,6 @@ def select_action_epsilon_greedy_policy(state, epsilon, q_table, actions):
 
         return selected_action
     
-
 def build_q_table(state_space, action_space):
     """[Method that creates a q_table to represent the 
         expected reward of being in a certain state and doing a particular action]
@@ -157,14 +157,70 @@ def build_q_table(state_space, action_space):
 
     return q_table
 
+def plot_optimal_value_function(q_table):
+    """[summary]
+        x - dealer showing (p, q)
+        y - player sum (a, b)
+        z - v* = max q(a,s) for all a
 
-if __name__ == "__main__":
-    q_table, avg_rewards = train_monte_carlo_control()
-    
+    Arguments:
+        q_table {[type]} -- [description]
+    """
+    dealer_showing = [i for i in range(0, 10+1)]
+    player_sums = [ i for i in range(10, 21+1)]
+    actions = [0, 1]
+    v_max_list = []
+
+    def get_state_value(dealer_showing, player_sums):
+        max_list = []
+        dealer_showing = dealer_showing
+        print(dealer_showing)
+        print(player_sums)
+        player_sums = player_sums
+
+        for dealer_show in dealer_showing:
+            for player_sum in player_sums:
+                max_reward = -10000
+                for action in actions:
+                    if q_table[((dealer_show, player_sum), action)] > max_reward:
+                        max_reward = q_table[((dealer_show, player_sum), action)]
+                max_list.append(max_reward)
+
+        return np.array(max_list)
+
+    v_max_s = get_state_value(dealer_showing, player_sums)
+
+    dealer_showing, player_sums = np.meshgrid(dealer_showing, player_sums)
+
+    v_max = v_max_s.reshape(dealer_showing.shape)
+    print(v_max)
+
+    fig = plt.figure(2)
+    ax = fig.add_subplot(111, projection='3d')
+   
+    ax.set_xlabel('Dealer Showing')
+    ax.set_ylabel('Player Sum')
+    ax.set_zlabel('Value')
+    ax.set_title("Optimal value function plot")
+   
+    ax.plot_surface(dealer_showing, player_sums, v_max, rstride=1, cstride=1, cmap=cm.coolwarm, 
+                               linewidth=0, antialiased=False)
+    plt.show()
+
+def plot_avg_rewards(avg_rewards):
     #plt.scatter(range(len(avg_rewards)), avg_rewards, s=1)
+    plt.figure(1)
     plt.plot(avg_rewards)
     plt.ylabel('AVERAGE REWARD')
     plt.xlabel("EPISODES")
     plt.title("Average reward at each episode")
     plt.show()
+
+if __name__ == "__main__":
+    q_table, avg_rewards = train_monte_carlo_control()
+    
+    plot_optimal_value_function(q_table)
+    plot_avg_rewards(avg_rewards)
+    
+    
 
